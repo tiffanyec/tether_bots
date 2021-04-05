@@ -1,0 +1,5 @@
+salto
+/home/vrep/vrepProjects/thesis/ros_ws/devel/.private/salto/cmake.lock /home/vrep/vrepProjects/thesis/ros_ws/devel/./cmake.lock
+/home/vrep/vrepProjects/thesis/ros_ws/devel/.private/salto/lib/pkgconfig/salto.pc /home/vrep/vrepProjects/thesis/ros_ws/devel/lib/pkgconfig/salto.pc
+/home/vrep/vrepProjects/thesis/ros_ws/devel/.private/salto/share/salto/cmake/saltoConfig.cmake /home/vrep/vrepProjects/thesis/ros_ws/devel/share/salto/cmake/saltoConfig.cmake
+/home/vrep/vrepProjects/thesis/ros_ws/devel/.private/salto/share/salto/cmake/saltoConfig-version.cmake /home/vrep/vrepProjects/thesis/ros_ws/devel/share/salto/cmake/saltoConfig-version.cmake

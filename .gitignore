@@ -1,0 +1,7 @@
+ros_ws/build/
+ros_ws/devel/
+ros_ws/logs/
+ros_ws/src/vrep_plugin_skeleton
+ros_ws/src/vrep_skeleton_msg_and_srv
+ros_ws/src/vrep_ros_interface
+ros_ws/src/v_repStubsGen
