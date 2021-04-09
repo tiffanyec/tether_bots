@@ -16,4 +16,4 @@ from numpy.linalg import inv
 class Controller():
 
     def __init__(self):
-        
+        vel_pub = rospy.Publisher('/vrep_ros_interface/car_vel', Float32MultiArray, queue_size=10)
