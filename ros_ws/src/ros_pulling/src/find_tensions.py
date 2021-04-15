@@ -8,7 +8,7 @@ from geometry_msgs.msg import Vector3
 import numpy as np
 from numpy import linalg
 import matplotlib.pyplot as plt
-import scipy  
+import scipy
 from scipy import signal
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import inv
