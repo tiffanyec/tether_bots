@@ -15,30 +15,42 @@ from numpy.linalg import inv
 
 class Controller():
 
-    def __init__(self):
-        self.K = 20.0
-        self.all_curr_vel = []
-        self.time = []
+    def __init__(self, des_pos, curr_pos, car):
+        self.des_pos = des_pos
+        self.curr_pos = curr_pos
+        self.Kx = 50.0
+        self.Ky = 20.0
+        self.car = car
+        # self.all_curr_vel = []
+        # self.time = []
         self.all_pos = []
-        self.vel_pub = rospy.Publisher('/vrep_ros_interface/car_vel', Float32MultiArray, queue_size=10)
-        rospy.Subscriber('/vrep_ros_interface/car_curr_vel', Float32MultiArray, self.vel_callback, queue_size=1, buff_size=2**8)
-        rospy.Subscriber('/vrep_ros_interface/car_pos', Float32MultiArray, self.pos_callback, queue_size=1, buff_size=2**8)
-        rospy.spin()
-        self.plotting()
+        self.vel_pub = rospy.Publisher('/vrep_ros_interface/car_vel' + str(car), Float32MultiArray, queue_size=10)
+        # rospy.Subscriber('/vrep_ros_interface/car_curr_vel', Float32MultiArray, self.vel_callback, queue_size=1, buff_size=2**8)
+        # rospy.Subscriber('/vrep_ros_interface/car_pos', Float32MultiArray, self.pos_callback, queue_size=1, buff_size=2**8)
+        # rospy.spin()
+        # self.plotting()
 
-    def vel_callback(self, msg):
-        print('hello from vel_callback')
-        self.all_curr_vel.append([msg.data[0], msg.data[1]])
-        self.time.append(msg.data[-1])
-        curr_y_vel = msg.data[1]
-        des_y_vel = 0
-        error_y = des_y_vel - curr_y_vel
+    def set_velocity(self):
+        # print('hello from set_velocity')
+        # self.all_curr_vel.append([msg.data[0], msg.data[1]])
+        # self.time.append(msg.data[-1])
+        curr_y_pos = self.curr_pos[1]
+        des_y_pos = self.curr_pos[1]
+        curr_x_pos = self.curr_pos[0]
+        des_x_pos = self.des_pos
+        print(des_x_pos)
+        print(curr_x_pos)
+
+        error_y = des_y_pos - curr_y_pos
+        error_x = des_x_pos - curr_x_pos
+
         vel = Float32MultiArray()
-        vel.data = [msg.data[0], self.K*error_y, msg.data[2]]
+        vel.data = [self.Kx*error_x, self.Ky*error_y, 0]
         self.vel_pub.publish(vel)
+        # print('set velocity to: ' + str(vel.data))
     
-    def pos_callback(self, msg):
-        self.all_pos.append(msg.data[1])
+    # def pos_callback(self, msg):
+    #     self.all_pos.append(msg.data[1])
     
     def plotting(self):
         # print("hello from plotting")
@@ -64,6 +76,6 @@ class Controller():
         plt.show()
 
 
-if __name__ == '__main__':
-    rospy.init_node("controller", anonymous=True)
-    c = Controller() 
+# if __name__ == '__main__':
+#     rospy.init_node("controller", anonymous=True)
+#     c = Controller() 
