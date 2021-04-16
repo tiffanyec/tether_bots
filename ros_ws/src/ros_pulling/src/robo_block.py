@@ -28,6 +28,7 @@ class Robo_Block():
         self.curr_pos = curr_pos
         self.done = False
         self.error = None
+        self.last_pos = None
         
         # rospy.Subscriber('/vrep_ros_interface/tensions', Float32MultiArray, self.ten_callback, queue_size = 1, buff_size=2**8)
         # rospy.Subscriber('/vrep_ros_interface/car_pos' + str(car), Float32MultiArray, self.pos1_callback, queue_size=1, buff_size=2**8)
@@ -55,7 +56,7 @@ class Robo_Block():
     #     else:
     #         self.des_pos = x + self.pos_inc
     
-    def control(self):
+    def control(self, maintain):
         x = self.curr_pos[0]
         if x < 0:
             self.des_pos = x - self.pos_inc
@@ -63,20 +64,26 @@ class Robo_Block():
             self.des_pos = x + self.pos_inc
 
         if self.curr_tension != [] and self.des_pos:
-            error = self.des_t - self.curr_tension[-1]
-            print('tension error: ' + str(error))
-            if abs(error) > 0.5:
-                # TODO call car controller here
-                print('calling controller from robo_block 1')
-                self.controller.des_pos = self.des_pos
-                self.controller.curr_pos = self.curr_pos
-                self.controller.set_velocity()
-                self.done = False
+            if not maintain:
+                self.last_pos = self.curr_pos
+                error = self.des_t - self.curr_tension[-1]
+                print('tension error: ' + str(error))
+                if abs(error) > 0.5:
+                    # TODO call car controller here
+                    print('calling controller from robo_block 1')
+                    self.controller.des_pos = self.des_pos
+                    self.controller.curr_pos = self.curr_pos
+                    self.controller.set_velocity()
+                    self.done = False
+                else:
+                    # TODO call car controller to stop
+                    print('calling controller from robo_block 2')
+                    self.controller.des_pos = self.curr_pos[0]
+                    self.controller.curr_pos = self.curr_pos
+                    self.controller.set_velocity()
+                    self.done = True
             else:
-                # TODO call car controller to stop
-                print('calling controller from robo_block 2')
-                self.controller.des_pos = self.curr_pos[0]
+                self.controller.des_pos = self.last_pos[0]
                 self.controller.curr_pos = self.curr_pos
                 self.controller.set_velocity()
-                self.done = True
 

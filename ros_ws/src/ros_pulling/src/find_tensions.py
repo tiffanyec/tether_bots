@@ -37,6 +37,7 @@ class Tensions():
         self.car1_angle = None
         self.car2_angle = None
         self.block_angle = None
+        self.all_block_angle= []
         self.des_left_ten = []
         self.des_right_ten = []
         self.left_car_pos = []
@@ -55,7 +56,7 @@ class Tensions():
             self.control()
             # print('i have called control')
 
-        # self.plotting()
+        self.plotting()
 
 
     def ten_callback(self, msg):
@@ -91,6 +92,7 @@ class Tensions():
     
     def block_angle_callback(self, msg):
         self.block_angle = msg.data[1]
+        self.all_block_angle.append(msg.data[1])
         # print('block angle is: ' + str(self.block_angle))
     
     def car1_find_angle(self):
@@ -148,8 +150,8 @@ class Tensions():
                 self.robo_block2.curr_tension = self.right_avg_tension
                 self.robo_block2.curr_pos = self.right_car_pos[-1]
                 
-                self.robo_block1.control()
-                self.robo_block2.control()
+                self.robo_block1.control(False)
+                self.robo_block2.control(False)
                 print('end of control while loop. done = ' + str(self.robo_block1.done))
                 print('end of control while loop. done = ' + str(self.robo_block2.done))
 
@@ -178,8 +180,8 @@ class Tensions():
                 self.robo_block2.curr_tension = self.right_avg_tension
                 self.robo_block2.curr_pos = self.right_car_pos[-1]
                 
-                self.robo_block1.control()
-                self.robo_block2.control()
+                self.robo_block1.control(True)
+                self.robo_block2.control(True)
 
                 
 
@@ -209,14 +211,25 @@ class Tensions():
         right_x, right_y = [row[0] for row in self.right_car_pos], [row[1] for row in self.right_car_pos]
 
         fig, ax = plt.subplots()  # Create a figure and an axes.
-        ax.plot(self.ten_time, self.left_avg_tension, color='tab:pink', label='t1')  # Plot some data on the axes.
-        ax.plot(self.ten_time, self.right_avg_tension, color='tab:cyan', label='t2')  # Plot more data on the axes...
+        ax.plot(self.ten_time, self.left_avg_tension[:len(self.ten_time)], color='tab:pink', label='t1')  # Plot some data on the axes.
+        ax.plot(self.ten_time, self.right_avg_tension[:len(self.ten_time)], color='tab:cyan', label='t2')  # Plot more data on the axes...
         ax.plot(self.ten_time, np.abs(self.des_left_ten[:len(self.ten_time)]), color="tab:red", label='desired t1')
         ax.plot(self.ten_time, np.abs(self.des_right_ten[:len(self.ten_time)]), color="tab:blue", label="desired t2")
+        ax.set_xlabel('Time (s)')  # Add an x-label to the axes.
+        # color = 'tab:red'
+        plt.title('Current and Desired Tensions')
+        ax.set_ylabel('Tension (N)')  # Add a y-label to the axes.
         plt.legend()
-        ax.set_xlabel('Time')  # Add an x-label to the axes.
-        color = 'tab:red'
-        ax.set_ylabel('Tension', color=color)  # Add a y-label to the axes.
+        plt.show()
+
+        fig2, ax2 = plt.subplots()
+        if len(self.all_block_angle) >= self.ten_time:
+            ax2.plot(self.ten_time[:len(self.all_block_angle)], self.all_block_angle, label='block angle')
+        else:
+            ax2.plot(self.ten_time, self.all_block_angle[:len(self.ten_time)], label='block angle')  
+        ax2.set_xlabel('Time (s)')
+        ax2.set_ylabel('Angle (rad)')
+        plt.title('Block Angle')
         # ax2 = ax.twinx()
         # ax2.plot(self.pos_time[:len(left_x)], left_x, label='car1 position')
         # ax2.plot(self.pos_time[:len(block_x)], block_x, label='block position')
