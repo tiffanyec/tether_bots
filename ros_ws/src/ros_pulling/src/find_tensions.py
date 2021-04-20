@@ -17,7 +17,7 @@ from robo_block import Robo_Block
 class Tensions():
 
     def __init__(self, des_angle):
-        self.des_angle = des_angle
+        self.des_angle = float(des_angle)
         self.left_avg_tension = []
         self.right_avg_tension = []
         self.ten_time = []
@@ -43,6 +43,7 @@ class Tensions():
         self.left_car_pos = []
         self.right_car_pos = []
         self.block_all_pos = []
+        self.block_time = []
         self.robo_block1 = Robo_Block(None, 0.05, 1, None, None)
         self.robo_block2 = Robo_Block(None, 0.05, 2, None, None)
         rospy.Subscriber('/vrep_ros_interface/block_angle', Float32MultiArray, self.block_angle_callback, queue_size=1, buff_size=2**8)
@@ -93,6 +94,7 @@ class Tensions():
     def block_angle_callback(self, msg):
         self.block_angle = msg.data[1]
         self.all_block_angle.append(msg.data[1])
+        self.block_time.append(msg.data[-1])
         # print('block angle is: ' + str(self.block_angle))
     
     def car1_find_angle(self):
@@ -223,13 +225,10 @@ class Tensions():
         plt.show()
 
         fig2, ax2 = plt.subplots()
-        if len(self.all_block_angle) >= self.ten_time:
-            ax2.plot(self.ten_time[:len(self.all_block_angle)], self.all_block_angle, label='block angle')
-        else:
-            ax2.plot(self.ten_time, self.all_block_angle[:len(self.ten_time)], label='block angle')  
+        ax2.plot(self.block_time, self.all_block_angle[:len(self.block_time)], label='block angle')  
         ax2.set_xlabel('Time (s)')
         ax2.set_ylabel('Angle (rad)')
-        plt.title('Block Angle')
+        plt.title('Block Angle (Desired: ' + str(self.des_angle) + ' rad)')
         # ax2 = ax.twinx()
         # ax2.plot(self.pos_time[:len(left_x)], left_x, label='car1 position')
         # ax2.plot(self.pos_time[:len(block_x)], block_x, label='block position')
@@ -242,5 +241,6 @@ class Tensions():
 
 
 if __name__ == '__main__':
+    des_a = raw_input("Please enter desired block angle (rad): ")
     rospy.init_node("tensions", anonymous=True)
-    t = Tensions(-0.3)  
+    t = Tensions(des_a)
