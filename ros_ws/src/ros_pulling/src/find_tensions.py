@@ -16,8 +16,9 @@ from robo_block import Robo_Block
 
 class Tensions():
 
-    def __init__(self, des_angle):
+    def __init__(self, des_angle, des_x_pos):
         self.des_angle = float(des_angle)
+        self.des_x_pos = float(des_x_pos)
         self.left_avg_tension = []
         self.right_avg_tension = []
         self.ten_time = []
@@ -117,7 +118,8 @@ class Tensions():
             theta2 = self.car2_angle
             theta3 = self.des_angle
             torque = self.M*9.81*self.d*np.cos(self.block_angle)
-            error = theta3 - self.block_angle
+            a_error = theta3 - self.block_angle
+            p_error = self.block_pos[0] - self.des_x_pos
             T = 7 # time for acceleration
 
             self.robo_block1.curr_tension = self.left_avg_tension
@@ -127,21 +129,25 @@ class Tensions():
             self.robo_block2.curr_pos = self.right_car_pos[-1]
 
             # want torque greater than gravity to rotate block (positive angular acceleration)
-            if abs(error) > 0.1:
-                print('hello the angle error is ' + str(error))
-                des_ang_acc = (4* error) / (T^2)
+            if abs(a_error) > 0.1 and abs(p_error) > 0.1:
+                # print('hello the angle error is ' + str(a_error))
+                # print('hello the position error is ' + str(p_error))
+                des_ang_acc = (4* a_error) / (T**2)
                 torque += (self.I*des_ang_acc) # adding torque to rotate block
-                des_wrench = np.array([[0], 
+                des_pos_acc = (4*p_error)/(T**2)
+                x_force = self.M*des_pos_acc
+                des_wrench = np.array([[x_force], 
                                 [0], 
                                 [torque]])
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
                 self.des_left_ten.append(out[0][0])
                 self.des_right_ten.append(out[1][0])
+                print(self.des_left_ten)
 
                 # set des_t for robo_block for car1 and car2
                 self.robo_block1.des_t = out[0][0]
                 self.robo_block2.des_t = out[1][0]
-                print('des tensions are: ' + str(out))
+                
 
                 # call robo_block control
                 # while not self.robo_block1.done and not self.robo_block2.done:
@@ -154,8 +160,8 @@ class Tensions():
                 
                 self.robo_block1.control(False)
                 self.robo_block2.control(False)
-                print('end of control while loop. done = ' + str(self.robo_block1.done))
-                print('end of control while loop. done = ' + str(self.robo_block2.done))
+                # print('end of control while loop. done = ' + str(self.robo_block1.done))
+                # print('end of control while loop. done = ' + str(self.robo_block2.done))
 
 
             # just resist gravity and stop rotating if within error tolerance
@@ -169,11 +175,12 @@ class Tensions():
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
                 self.des_left_ten.append(out[0][0])
                 self.des_right_ten.append(out[1][0])
+                print(self.des_left_ten)
 
                 # set des_t for robo_block for car1 and car2
                 self.robo_block1.des_t = out[0][0]
                 self.robo_block2.des_t = out[1][0]
-                print('des tensions are: ' + str(out))
+                # print('des tensions are: ' + str(out))
 
                 # while not rospy.is_shutdown():
                 self.robo_block1.curr_tension = self.left_avg_tension
@@ -207,6 +214,13 @@ class Tensions():
         # plt.ylabel('t2 tension')
         # plt.title("t1 vs. t2")
         # plt.show()
+        MEDIUM_SIZE = 12
+        plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+        plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+        plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+        plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+        plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+        plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 
         left_x, left_y = [row[0] for row in self.left_car_pos], [row[1] for row in self.left_car_pos]
         block_x, block_y = [row[0] for row in self.block_all_pos], [row[1] for row in self.block_all_pos]
@@ -242,5 +256,6 @@ class Tensions():
 
 if __name__ == '__main__':
     des_a = raw_input("Please enter desired block angle (rad): ")
+    des_p = raw_input("Please enter desired block x position (m): ")
     rospy.init_node("tensions", anonymous=True)
-    t = Tensions(des_a)
+    t = Tensions(des_a, des_p)
