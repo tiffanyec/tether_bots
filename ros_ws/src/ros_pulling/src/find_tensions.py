@@ -140,14 +140,14 @@ class Tensions():
                                 [0], 
                                 [torque]])
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
-                self.des_left_ten.append(out[0][0])
+                self.des_left_ten.append(np.abs(out[0][0]))
                 self.des_right_ten.append(out[1][0])
                 # print(self.des_left_ten)
                 # print(des_wrench)
                 # print([theta1, theta2])
 
                 # set des_t for robo_block for car1 and car2
-                self.robo_block1.des_t = out[0][0]
+                self.robo_block1.des_t = np.abs(out[0][0])
                 self.robo_block2.des_t = out[1][0]
                 
 
@@ -175,14 +175,14 @@ class Tensions():
                                 [0], 
                                 [torque]])
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
-                self.des_left_ten.append(out[0][0])
+                self.des_left_ten.append(np.abs(out[0][0]))
                 self.des_right_ten.append(out[1][0])
                 # print(self.des_left_ten)
                 # print(des_wrench)
                 # print([theta1, theta2])
 
                 # set des_t for robo_block for car1 and car2
-                self.robo_block1.des_t = out[0][0]
+                self.robo_block1.des_t = np.abs(out[0][0])
                 self.robo_block2.des_t = out[1][0]
                 # print('des tensions are: ' + str(out))
 

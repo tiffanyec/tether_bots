@@ -66,7 +66,7 @@ class Robo_Block():
         error = np.abs(self.des_t - self.curr_tension[-1])
 
         if np.abs(self.des_t) < np.abs(self.curr_tension[-1]):
-            self.inc_sign = -1
+            self.inc_sign = -0.2
         else:
             self.inc_sign = 1
 
