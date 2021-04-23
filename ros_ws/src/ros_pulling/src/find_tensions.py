@@ -26,7 +26,7 @@ class Tensions():
         self.d = 0.5/2
         self.r = 0.3/2
         self.left_dist = 0
-        self.M = 0.2
+        self.M = 0.1
         self.I = (1/3)*(self.M)*((2*self.r)**2 + (2*self.d)**2)
         # self.right_dist = 0
         self.car1_pos = []
@@ -45,8 +45,8 @@ class Tensions():
         self.right_car_pos = []
         self.block_all_pos = []
         self.block_time = []
-        self.robo_block1 = Robo_Block(None, 0.05, 1, None, None)
-        self.robo_block2 = Robo_Block(None, 0.05, 2, None, None)
+        self.robo_block1 = Robo_Block(None, 1, None, None)
+        self.robo_block2 = Robo_Block(None, 2, None, None)
         rospy.Subscriber('/vrep_ros_interface/block_angle', Float32MultiArray, self.block_angle_callback, queue_size=1, buff_size=2**8)
         rospy.Subscriber('/vrep_ros_interface/block_pos', Float32MultiArray, self.pos2_callback, queue_size = 1, buff_size=2**8)
         rospy.Subscriber('/vrep_ros_interface/car_pos1', Float32MultiArray, self.pos1_callback, queue_size = 1, buff_size=2**8)
@@ -78,7 +78,7 @@ class Tensions():
     # block
     def pos2_callback(self, msg):
         # print('ello from pos2_callback')
-        self.block_all_pos.append([msg.data[0], msg.data[1]])
+        self.block_all_pos.append(msg.data[0])
         self.block_pos = [msg.data[0], msg.data[1], msg.data[2]]
         x = np.sqrt((self.diag/2)**2 - (self.block_pos[2])**2)
         # if self.car1_pos != []:
@@ -106,7 +106,7 @@ class Tensions():
     
     def car2_find_angle(self):
         g = np.arcsin(self.block_pos[2] / (self.diag + self.rope2_len))
-        self.car2_angle = 90 - g
+        self.car2_angle = (np.pi/2) - g
         # print('car2 angle is: ' + str(self.car2_angle))
         # self.control()
 
@@ -119,8 +119,8 @@ class Tensions():
             theta3 = self.des_angle
             torque = self.M*9.81*self.d*np.cos(self.block_angle)
             a_error = theta3 - self.block_angle
-            p_error = self.block_pos[0] - self.des_x_pos
-            T = 7 # time for acceleration
+            p_error = self.des_x_pos - self.block_pos[0]
+            T = 15 # time for acceleration
 
             self.robo_block1.curr_tension = self.left_avg_tension
             self.robo_block1.curr_pos = self.left_car_pos[-1]
@@ -129,7 +129,7 @@ class Tensions():
             self.robo_block2.curr_pos = self.right_car_pos[-1]
 
             # want torque greater than gravity to rotate block (positive angular acceleration)
-            if abs(a_error) > 0.1 and abs(p_error) > 0.1:
+            if abs(a_error) > 0.1 or abs(p_error) > 0.05:
                 # print('hello the angle error is ' + str(a_error))
                 # print('hello the position error is ' + str(p_error))
                 des_ang_acc = (4* a_error) / (T**2)
@@ -142,7 +142,9 @@ class Tensions():
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
                 self.des_left_ten.append(out[0][0])
                 self.des_right_ten.append(out[1][0])
-                print(self.des_left_ten)
+                # print(self.des_left_ten)
+                # print(des_wrench)
+                # print([theta1, theta2])
 
                 # set des_t for robo_block for car1 and car2
                 self.robo_block1.des_t = out[0][0]
@@ -175,7 +177,9 @@ class Tensions():
                 out = self.calculate(theta1, theta2, theta3, des_wrench)
                 self.des_left_ten.append(out[0][0])
                 self.des_right_ten.append(out[1][0])
-                print(self.des_left_ten)
+                # print(self.des_left_ten)
+                # print(des_wrench)
+                # print([theta1, theta2])
 
                 # set des_t for robo_block for car1 and car2
                 self.robo_block1.des_t = out[0][0]
@@ -222,13 +226,13 @@ class Tensions():
         plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
         plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 
-        left_x, left_y = [row[0] for row in self.left_car_pos], [row[1] for row in self.left_car_pos]
-        block_x, block_y = [row[0] for row in self.block_all_pos], [row[1] for row in self.block_all_pos]
-        right_x, right_y = [row[0] for row in self.right_car_pos], [row[1] for row in self.right_car_pos]
+        # left_x, left_y = [row[0] for row in self.left_car_pos], [row[1] for row in self.left_car_pos]
+        # block_x, block_y = [row[0] for row in self.block_all_pos], [row[1] for row in self.block_all_pos]
+        # right_x, right_y = [row[0] for row in self.right_car_pos], [row[1] for row in self.right_car_pos]
 
         fig, ax = plt.subplots()  # Create a figure and an axes.
-        ax.plot(self.ten_time, self.left_avg_tension[:len(self.ten_time)], color='tab:pink', label='t1')  # Plot some data on the axes.
-        ax.plot(self.ten_time, self.right_avg_tension[:len(self.ten_time)], color='tab:cyan', label='t2')  # Plot more data on the axes...
+        ax.plot(self.ten_time, np.abs(self.left_avg_tension[:len(self.ten_time)]), color='tab:pink', label='t1')  # Plot some data on the axes.
+        ax.plot(self.ten_time, np.abs(self.right_avg_tension[:len(self.ten_time)]), color='tab:cyan', label='t2')  # Plot more data on the axes...
         ax.plot(self.ten_time, np.abs(self.des_left_ten[:len(self.ten_time)]), color="tab:red", label='desired t1')
         ax.plot(self.ten_time, np.abs(self.des_right_ten[:len(self.ten_time)]), color="tab:blue", label="desired t2")
         ax.set_xlabel('Time (s)')  # Add an x-label to the axes.
@@ -251,6 +255,11 @@ class Tensions():
         # ax2.set_ylabel('x-axis Position', color=color)
         # plt.title("Tensions, Positions, and Desired Tensions Over Time")  # Add a title to the axes.
         plt.legend()  # Add a legend.
+        plt.show()
+
+        fig3, ax3 = plt.subplots()
+        ax3.plot(self.block_time, self.block_all_pos[:len(self.block_time)], label='block position')
+        plt.legend()
         plt.show()
 
 

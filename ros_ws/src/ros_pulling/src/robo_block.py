@@ -16,10 +16,10 @@ from controller import Controller
 
 class Robo_Block():
 
-    def __init__(self, des_t, pos_inc, car, curr_tension, curr_pos):
+    def __init__(self, des_t, car, curr_tension, curr_pos):
         # rospy.init_node("robo_block", anonymous=True)
         self.des_t = des_t
-        self.pos_inc = pos_inc
+        # self.pos_inc = pos_inc
         self.des_pos = None
         self.car = car
         self.curr_tension = curr_tension
@@ -29,6 +29,11 @@ class Robo_Block():
         self.done = False
         self.error = None
         self.last_pos = None
+        self.inc_sign = 1
+        if car == 1:
+            self.K = 0.02
+        else:
+            self.K = 0.2
         
         # rospy.Subscriber('/vrep_ros_interface/tensions', Float32MultiArray, self.ten_callback, queue_size = 1, buff_size=2**8)
         # rospy.Subscriber('/vrep_ros_interface/car_pos' + str(car), Float32MultiArray, self.pos1_callback, queue_size=1, buff_size=2**8)
@@ -58,26 +63,35 @@ class Robo_Block():
     
     def control(self, maintain):
         x = self.curr_pos[0]
-        if x < 0:
-            self.des_pos = x - self.pos_inc
+        error = np.abs(self.des_t - self.curr_tension[-1])
+
+        if np.abs(self.des_t) < np.abs(self.curr_tension[-1]):
+            self.inc_sign = -1
         else:
-            self.des_pos = x + self.pos_inc
+            self.inc_sign = 1
+
+        pos_inc = self.K*error*self.inc_sign
+
+        if x < 0:
+            self.des_pos = x - pos_inc
+        else:
+            self.des_pos = x + pos_inc
+        
+        print(pos_inc)
 
         if self.curr_tension != [] and self.des_pos:
             if not maintain:
                 self.last_pos = self.curr_pos
-                error = self.des_t - self.curr_tension[-1]
-                print('tension error: ' + str(error))
-                if abs(error) > 0.5:
-                    # TODO call car controller here
-                    print('calling controller from robo_block 1')
+                # error = self.des_t - self.curr_tension[-1]
+                # print('tension error: ' + str(error))
+                if abs(error) > 0.05:
+                    # print('calling controller from robo_block 1')
                     self.controller.des_pos = self.des_pos
                     self.controller.curr_pos = self.curr_pos
                     self.controller.set_velocity()
                     self.done = False
                 else:
-                    # TODO call car controller to stop
-                    print('calling controller from robo_block 2')
+                    # print('calling controller from robo_block 2')
                     self.controller.des_pos = self.curr_pos[0]
                     self.controller.curr_pos = self.curr_pos
                     self.controller.set_velocity()

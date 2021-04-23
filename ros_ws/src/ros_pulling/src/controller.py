@@ -18,7 +18,7 @@ class Controller():
     def __init__(self, des_pos, curr_pos, car):
         self.des_pos = des_pos
         self.curr_pos = curr_pos
-        self.Kx = 50.0
+        self.Kx = 30.0
         self.Ky = 20.0
         self.car = car
         # self.all_curr_vel = []
@@ -38,8 +38,8 @@ class Controller():
         des_y_pos = self.curr_pos[1]
         curr_x_pos = self.curr_pos[0]
         des_x_pos = self.des_pos
-        print(des_x_pos)
-        print(curr_x_pos)
+        # print(des_x_pos)
+        # print(curr_x_pos)
 
         error_y = des_y_pos - curr_y_pos
         error_x = des_x_pos - curr_x_pos
