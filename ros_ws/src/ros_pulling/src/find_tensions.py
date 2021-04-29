@@ -44,6 +44,8 @@ class Tensions():
         self.left_car_pos = []
         self.right_car_pos = []
         self.block_all_pos = []
+        self.car1_all_pos = []
+        self.car2_all_pos = []
         self.block_time = []
         self.robo_block1 = Robo_Block(None, 1, None, None)
         self.robo_block2 = Robo_Block(None, 2, None, None)
@@ -72,6 +74,7 @@ class Tensions():
     def pos1_callback(self, msg):
         # print('hello from pos1_callback')
         self.car1_pos = [msg.data[0], msg.data[1], msg.data[2]]
+        self.car1_all_pos.append(msg.data[0])
         self.left_car_pos.append([msg.data[0], msg.data[1]])
         self.pos_time.append(msg.data[-1])
 
@@ -89,6 +92,7 @@ class Tensions():
     def pos3_callback(self, msg):
         # print('hello from pos3_callback')
         self.car2_pos = [msg.data[0], msg.data[1], msg.data[2]]
+        self.car2_all_pos.append(msg.data[0])
         self.right_car_pos.append([msg.data[0], msg.data[1]])
         self.car2_find_angle()
     
@@ -226,39 +230,48 @@ class Tensions():
         plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
         plt.rc('figure', titlesize=MEDIUM_SIZE)  # fontsize of the figure title
 
-        # left_x, left_y = [row[0] for row in self.left_car_pos], [row[1] for row in self.left_car_pos]
-        # block_x, block_y = [row[0] for row in self.block_all_pos], [row[1] for row in self.block_all_pos]
-        # right_x, right_y = [row[0] for row in self.right_car_pos], [row[1] for row in self.right_car_pos]
-
-        fig, ax = plt.subplots()  # Create a figure and an axes.
-        ax.plot(self.ten_time, np.abs(self.left_avg_tension[:len(self.ten_time)]), color='tab:pink', label='t1')  # Plot some data on the axes.
-        ax.plot(self.ten_time, np.abs(self.right_avg_tension[:len(self.ten_time)]), color='tab:cyan', label='t2')  # Plot more data on the axes...
-        ax.plot(self.ten_time, np.abs(self.des_left_ten[:len(self.ten_time)]), color="tab:red", label='desired t1')
-        ax.plot(self.ten_time, np.abs(self.des_right_ten[:len(self.ten_time)]), color="tab:blue", label="desired t2")
-        ax.set_xlabel('Time (s)')  # Add an x-label to the axes.
-        # color = 'tab:red'
+        #fig, ax = plt.subplots()  # Create a figure and an axes.
+        plt.figure()
+        plt.subplot(2, 1, 1)
+        plt.plot(self.ten_time, np.abs(self.left_avg_tension[:len(self.ten_time)]), color='tab:pink', label='current t1')  # Plot some data on the axes.
+        plt.plot(self.ten_time, np.abs(self.right_avg_tension[:len(self.ten_time)]), color='tab:cyan', label='current t2')  # Plot more data on the axes...
+        plt.xlabel('Time (s)') 
+        plt.ylabel('Tension (N)')
         plt.title('Current and Desired Tensions')
-        ax.set_ylabel('Tension (N)')  # Add a y-label to the axes.
+        plt.legend()
+        plt.subplot(2, 1, 2)
+        plt.plot(self.ten_time, np.abs(self.des_left_ten[:len(self.ten_time)]), color="tab:red", label='desired t1')
+        plt.plot(self.ten_time, np.abs(self.des_right_ten[:len(self.ten_time)]), color="tab:blue", label="desired t2")
+        plt.xlabel('Time (s)')  # Add an x-label to the axes.
+        # color = 'tab:red'
+        plt.ylabel('Tension (N)')  # Add a y-label to the axes.
         plt.legend()
         plt.show()
 
-        fig2, ax2 = plt.subplots()
-        ax2.plot(self.block_time, self.all_block_angle[:len(self.block_time)], label='block angle')  
-        ax2.set_xlabel('Time (s)')
-        ax2.set_ylabel('Angle (rad)')
-        plt.title('Block Angle (Desired: ' + str(self.des_angle) + ' rad)')
-        # ax2 = ax.twinx()
-        # ax2.plot(self.pos_time[:len(left_x)], left_x, label='car1 position')
-        # ax2.plot(self.pos_time[:len(block_x)], block_x, label='block position')
-        # ax2.plot(self.pos_time[:len(right_x)], right_x, label='car2 position')
-        # color = 'tab:blue'
-        # ax2.set_ylabel('x-axis Position', color=color)
-        # plt.title("Tensions, Positions, and Desired Tensions Over Time")  # Add a title to the axes.
+        # fig2, ax2 = plt.subplots()
+        plt.figure()
+        plt.subplot(2, 1, 1)
+        plt.plot(self.block_time, self.all_block_angle[:len(self.block_time)], label='block angle')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Angle (rad)')
+        plt.title('Block Angle (Desired: ' + str(self.des_angle) + ' rad), Block Position (Desired: ' + str(self.des_x_pos) + 'm)')
         plt.legend()  # Add a legend.
+        # plt.show()
+
+        # fig3, ax3 = plt.subplots()
+        plt.subplot(2, 1, 2)
+        plt.plot(self.block_time, self.block_all_pos[:len(self.block_time)], label='block position')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position (m)')
+        plt.legend()
         plt.show()
 
-        fig3, ax3 = plt.subplots()
-        ax3.plot(self.block_time, self.block_all_pos[:len(self.block_time)], label='block position')
+        plt.figure()
+        plt.plot(self.block_time, self.car1_all_pos[:len(self.block_time)], label='robot1 position')
+        plt.plot(self.block_time, self.car2_all_pos[:len(self.block_time)], label='robot2 position')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Position (m)')
+        plt.title('Robot Positions')
         plt.legend()
         plt.show()
 
