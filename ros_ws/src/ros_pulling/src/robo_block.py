@@ -30,10 +30,10 @@ class Robo_Block():
         self.error = None
         self.last_pos = None
         self.inc_sign = 1
-        if car == 1:
-            self.K = 0.02
-        else:
-            self.K = 0.2
+        # if car == 1:
+        #     self.K = 0.02
+        # else:
+        #     self.K = 0.2
         
         # rospy.Subscriber('/vrep_ros_interface/tensions', Float32MultiArray, self.ten_callback, queue_size = 1, buff_size=2**8)
         # rospy.Subscriber('/vrep_ros_interface/car_pos' + str(car), Float32MultiArray, self.pos1_callback, queue_size=1, buff_size=2**8)

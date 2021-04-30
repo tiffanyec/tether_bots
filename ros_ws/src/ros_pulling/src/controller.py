@@ -20,7 +20,12 @@ class Controller():
         self.curr_pos = curr_pos
         self.des_tension = 0.0
         self.curr_tension = 0.0
-        self.k_torque = .05
+        self.kp_torque = .02
+        self.kd_torque = .02
+        self.buffer = []
+        self.last_tension_error = 0
+        self.last_time = rospy.get_time()
+        self.buff_size= 8
         self.Kx = 30.0
         self.Ky = 20.0
         self.car = car
@@ -37,9 +42,27 @@ class Controller():
     def set_torque(self):
         # print('hello from set_velocity')
         tension_error = self.des_tension - self.curr_tension
-        torque_cmd = self.k_torque * tension_error
+        curr_time = rospy.get_time()
+        # print(f"Time is {curr_time}")
+        diff = (tension_error - self.last_tension_error)/(curr_time - self.last_time)
+        self.last_time = curr_time
+        self.last_tension_error = tension_error
+        self.buffer.append(diff)
+        # print(diff)
+        # print(self.buffer)
+        if len(self.buffer) == self.buff_size:
+            diff_avg = sum(self.buffer)/self.buff_size
+            # print(f"\ncar {self.car} derivative: {diff_avg}")
+            kp_term = self.kp_torque*tension_error 
+            kd_term = self.kd_torque*diff_avg
+            kd_term = np.clip(kd_term, -2*kp_term/3, 2*kp_term/3)
+            torque_cmd = kp_term + kd_term
+            self.buffer = self.buffer[1:]
+        else:
+            torque_cmd = self.kp_torque * tension_error
         if self.car==1:
             torque_cmd = -torque_cmd
+        torque_cmd = np.clip(torque_cmd, -.07, .07)
         print(f"\ncar{self.car} tension desired: {self.des_tension}")
         print(f"car{self.car} tension current: {self.curr_tension}")
         print(f"car{self.car} tension error: {tension_error}")
