@@ -5,7 +5,7 @@ end
 
 
 function setMotorVelocity(msg)
-    print('hello from setMotorVelocity')
+    -- print('hello from setMotorVelocity')
 
     motorHandles={-1,-1,-1,-1}
 
@@ -41,6 +41,11 @@ function setMotorTorque(msg)
     if des_torque[2] < 0 then
         right_vel = -maxVel
     end
+
+    sim.setJointMaxForce(motorHandles[1], des_torque[1])
+    sim.setJointMaxForce(motorHandles[2], des_torque[2])
+    sim.setJointMaxForce(motorHandles[3], des_torque[2])
+    sim.setJointMaxForce(motorHandles[4], des_torque[1])
 
     sim.setJointTargetVelocity(motorHandles[1], left_vel)
     sim.setJointTargetVelocity(motorHandles[2], -right_vel)

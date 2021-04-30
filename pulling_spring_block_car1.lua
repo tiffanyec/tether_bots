@@ -139,6 +139,11 @@ function setMotorTorque(msg)
         right_vel = -maxVel
     end
 
+    sim.setJointMaxForce(motorHandles[1], des_torque[1])
+    sim.setJointMaxForce(motorHandles[2], des_torque[2])
+    sim.setJointMaxForce(motorHandles[3], des_torque[2])
+    sim.setJointMaxForce(motorHandles[4], des_torque[1])
+
     sim.setJointTargetVelocity(motorHandles[1], left_vel)
     sim.setJointTargetVelocity(motorHandles[2], -right_vel)
     sim.setJointTargetVelocity(motorHandles[3], -right_vel)
