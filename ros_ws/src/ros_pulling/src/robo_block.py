@@ -63,41 +63,39 @@ class Robo_Block():
     
     def control(self, maintain):
         x = self.curr_pos[0]
-        error = np.abs(self.des_t - self.curr_tension[-1])
-
-        if np.abs(self.des_t) < np.abs(self.curr_tension[-1]):
-            self.inc_sign = -0.2
-        else:
-            self.inc_sign = 1
-
-        pos_inc = self.K*error*self.inc_sign
-
-        if x < 0:
-            self.des_pos = x - pos_inc
-        else:
-            self.des_pos = x + pos_inc
-        
-        print(pos_inc)
-
-        if self.curr_tension != [] and self.des_pos:
-            if not maintain:
-                self.last_pos = self.curr_pos
-                # error = self.des_t - self.curr_tension[-1]
-                # print('tension error: ' + str(error))
-                if abs(error) > 0.05:
-                    # print('calling controller from robo_block 1')
-                    self.controller.des_pos = self.des_pos
-                    self.controller.curr_pos = self.curr_pos
-                    self.controller.set_velocity()
-                    self.done = False
-                else:
-                    # print('calling controller from robo_block 2')
-                    self.controller.des_pos = self.curr_pos[0]
-                    self.controller.curr_pos = self.curr_pos
-                    self.controller.set_velocity()
-                    self.done = True
+        if self.curr_tension:
+            error = np.abs(self.des_t - self.curr_tension[-1])
+            if np.abs(self.des_t) < np.abs(self.curr_tension[-1]):
+                self.inc_sign = -0.2
             else:
-                self.controller.des_pos = self.last_pos[0]
-                self.controller.curr_pos = self.curr_pos
-                self.controller.set_velocity()
+                self.inc_sign = 1
+
+            pos_inc = self.K*error*self.inc_sign
+
+            if x < 0:
+                self.des_pos = x - pos_inc
+            else:
+                self.des_pos = x + pos_inc
+            
+            if self.curr_tension != [] and self.des_pos:
+                if not maintain:
+                    self.last_pos = self.curr_pos
+                    # error = self.des_t - self.curr_tension[-1]
+                    # print('tension error: ' + str(error))
+                    if abs(error) > 0.05:
+                        # print('calling controller from robo_block 1')
+                        self.controller.des_pos = self.des_pos
+                        self.controller.curr_pos = self.curr_pos
+                        self.controller.set_velocity()
+                        self.done = False
+                    else:
+                        # print('calling controller from robo_block 2')
+                        self.controller.des_pos = self.curr_pos[0]
+                        self.controller.curr_pos = self.curr_pos
+                        self.controller.set_velocity()
+                        self.done = True
+                else:
+                    self.controller.des_pos = self.last_pos[0]
+                    self.controller.curr_pos = self.curr_pos
+                    self.controller.set_velocity()
 

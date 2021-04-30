@@ -15,11 +15,14 @@ function init()
 
     if (not pluginNotFound) then
         TensionPub = simROS.advertise('tensions','std_msgs/Float32MultiArray')
-        PositionPub1 = simROS.advertise('car_pos1', 'std_msgs/Float32MultiArray')
-        PositionPub3 = simROS.advertise('car_pos2', 'std_msgs/Float32MultiArray')
+        PositionPub = simROS.advertise('pos', 'std_msgs/Float32MultiArray')
+        -- PositionPub1 = simROS.advertise('car_pos1', 'std_msgs/Float32MultiArray')
+        -- PositionPub2 = simROS.advertise('block_pos', 'std_msgs/Float32MultiArray')
+        -- PositionPub3 = simROS.advertise('car_pos2', 'std_msgs/Float32MultiArray')
 
         BlockAnglePub = simROS.advertise('block_angle', 'std_msgs/Float32MultiArray')
-        CarSub1=simROS.subscribe('car_vel1','std_msgs/Float32MultiArray','setMotorVelocity1')
+        simROS.subscribe('car_vel1','std_msgs/Float32MultiArray','setMotorVelocity')
+        simROS.subscribe('car_torque1','std_msgs/Float32MultiArray','setMotorTorque')
         --CarSub2=simROS.subscribe('car_vel2','std_msgs/Float32MultiArray','setMotorVelocity2')
         --TorquePub = simROS.advertise('torques','std_msgs/Float32MultiArray')
         --CopterSub=simROS.subscribe('quadPos', 'std_msgs/Float32MultiArray', 'setQuadSpeeds')
@@ -61,14 +64,20 @@ function getPositions(car1, block, car2)
 
     if (p1~=-1 and p2~=-1 and p3~=-1) then
         simTime = sim.getSimulationTime()
-        p1[#p1+1] = simTime
-        p2[#p2+1] = simTime
-        p3[#p3+1] = simTime
-        pos1 = {layout={}, data=p1}
-        pos2 = {layout={}, data=p2}
-        pos3 = {layout={}, data=p3}
-        p = {pos1, pos2, pos3}
-        return p
+        -- p1[#p1+1] = simTime
+        -- p2[#p2+1] = simTime
+        -- p3[#p3+1] = simTime
+        -- table.concat(p1 ,p2)
+        -- pos1 = {layout={}, data=p1}
+        -- pos2 = {layout={}, data=p2}
+        -- pos3 = {layout={}, data=p3}
+        data = {p1[1], p1[2], p1[3],
+               p2[1], p2[2], p2[3],
+               p3[1], p3[2], p3[3],
+               simTime}
+        -- p = {pos1, pos2, pos3}
+        pos = {layout={}, data=data}
+        return pos
     else
         return nil
     end
@@ -92,7 +101,7 @@ function getAngles(block)
 end
 
 -- car_vel subscriber callback
-function setMotorVelocity1(msg)
+function setMotorVelocity(msg)
 
     motorHandles={-1,-1,-1,-1}
 
@@ -111,6 +120,30 @@ function setMotorVelocity1(msg)
 
 end
 
+maxVel = 999999
+function setMotorTorque(msg)
+    motorHandles={-1, -1, -1, -1}
+
+    motorHandles[1]=sim.getObjectHandle('joint_front_left_wheel')
+    motorHandles[2]=sim.getObjectHandle('joint_front_right_wheel')
+    motorHandles[3]=sim.getObjectHandle('joint_back_right_wheel')
+    motorHandles[4]=sim.getObjectHandle('joint_back_left_wheel')
+
+    des_torque = msg.data
+    left_vel = maxVel
+    right_vel = maxVel
+    if des_torque[1] < 0 then
+        left_vel = -maxVel
+    end
+    if des_torque[2] < 0 then
+        right_vel = -maxVel
+    end
+
+    sim.setJointTargetVelocity(motorHandles[1], left_vel)
+    sim.setJointTargetVelocity(motorHandles[2], -right_vel)
+    sim.setJointTargetVelocity(motorHandles[3], -right_vel)
+    sim.setJointTargetVelocity(motorHandles[4], left_vel)
+end
 
 function sysCall_threadmain()
     init()
@@ -150,11 +183,10 @@ function sysCall_threadmain()
 
         p = getPositions(car1, block, car2)
         if (p~=nil) then
-            simROS.publish(PositionPub1, p[1])
-            -- Don't really know why this is here...
-            -- Errors if not commented out
+            simROS.publish(PositionPub, p)
+            -- simROS.publish(PositionPub1, p[1])
             -- simROS.publish(PositionPub2, p[2])
-            simROS.publish(PositionPub3, p[3])
+            -- simROS.publish(PositionPub3, p[3])
         end
         
         a = getAngles(block)
