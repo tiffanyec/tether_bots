@@ -18,17 +18,36 @@ class Controller():
     def __init__(self, des_pos, curr_pos, car):
         self.des_pos = des_pos
         self.curr_pos = curr_pos
+        self.des_tension = 0.0
+        self.curr_tension = 0.0
+        self.k_torque = .05
         self.Kx = 30.0
         self.Ky = 20.0
         self.car = car
         # self.all_curr_vel = []
         # self.time = []
         self.all_pos = []
-        self.vel_pub = rospy.Publisher('/vrep_ros_interface/car_vel' + str(car), Float32MultiArray, queue_size=10)
+        self.vel_pub = rospy.Publisher('/sim_ros_interface/car_vel' + str(car), Float32MultiArray, queue_size=10)
+        self.torque_pub = rospy.Publisher('/sim_ros_interface/car_torque' + str(car), Float32MultiArray, queue_size=10)
         # rospy.Subscriber('/vrep_ros_interface/car_curr_vel', Float32MultiArray, self.vel_callback, queue_size=1, buff_size=2**8)
         # rospy.Subscriber('/vrep_ros_interface/car_pos', Float32MultiArray, self.pos_callback, queue_size=1, buff_size=2**8)
         # rospy.spin()
         # self.plotting()
+
+    def set_torque(self):
+        # print('hello from set_velocity')
+        tension_error = self.des_tension - self.curr_tension
+        torque_cmd = self.k_torque * tension_error
+        if self.car==1:
+            torque_cmd = -torque_cmd
+        print(f"\ncar{self.car} tension desired: {self.des_tension}")
+        print(f"car{self.car} tension current: {self.curr_tension}")
+        print(f"car{self.car} tension error: {tension_error}")
+        print(f"car{self.car} torque command: {torque_cmd}")
+        torque_msg = Float32MultiArray()
+        torque_msg.data = np.array([torque_cmd, torque_cmd, 0.0]).astype(np.float32)
+        self.torque_pub.publish(torque_msg)
+        # print('set velocity to: ' + str(vel.data))
 
     def set_velocity(self):
         # print('hello from set_velocity')
