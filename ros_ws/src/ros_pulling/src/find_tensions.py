@@ -47,6 +47,9 @@ class Tensions():
         self.car1_all_pos = []
         self.car2_all_pos = []
         self.block_time = []
+        self.block_pos_time = []
+        self.car1_time = []
+        self.car2_time = []
         self.robo_block1 = Robo_Block(None, 1, None, None)
         self.robo_block2 = Robo_Block(None, 2, None, None)
         rospy.Subscriber('/vrep_ros_interface/block_angle', Float32MultiArray, self.block_angle_callback, queue_size=1, buff_size=2**8)
@@ -73,6 +76,7 @@ class Tensions():
     # car1
     def pos1_callback(self, msg):
         # print('hello from pos1_callback')
+        self.car1_time.append(msg.data[-1])
         self.car1_pos = [msg.data[0], msg.data[1], msg.data[2]]
         self.car1_all_pos.append(msg.data[0])
         self.left_car_pos.append([msg.data[0], msg.data[1]])
@@ -82,6 +86,7 @@ class Tensions():
     def pos2_callback(self, msg):
         # print('ello from pos2_callback')
         self.block_all_pos.append(msg.data[0])
+        self.block_pos_time.append(msg.data[-1])
         self.block_pos = [msg.data[0], msg.data[1], msg.data[2]]
         x = np.sqrt((self.diag/2)**2 - (self.block_pos[2])**2)
         # if self.car1_pos != []:
@@ -91,6 +96,7 @@ class Tensions():
     # car2
     def pos3_callback(self, msg):
         # print('hello from pos3_callback')
+        self.car2_time.append(msg.data[-1])
         self.car2_pos = [msg.data[0], msg.data[1], msg.data[2]]
         self.car2_all_pos.append(msg.data[0])
         self.right_car_pos.append([msg.data[0], msg.data[1]])
@@ -222,7 +228,7 @@ class Tensions():
         # plt.ylabel('t2 tension')
         # plt.title("t1 vs. t2")
         # plt.show()
-        MEDIUM_SIZE = 12
+        MEDIUM_SIZE = 20
         plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
         plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
         plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
@@ -235,7 +241,7 @@ class Tensions():
         plt.subplot(2, 1, 1)
         plt.plot(self.ten_time, np.abs(self.left_avg_tension[:len(self.ten_time)]), color='tab:pink', label='current t1')  # Plot some data on the axes.
         plt.plot(self.ten_time, np.abs(self.right_avg_tension[:len(self.ten_time)]), color='tab:cyan', label='current t2')  # Plot more data on the axes...
-        plt.xlabel('Time (s)') 
+        # plt.xlabel('Time (s)') 
         plt.ylabel('Tension (N)')
         plt.title('Current and Desired Tensions')
         plt.legend()
@@ -252,28 +258,29 @@ class Tensions():
         plt.figure()
         plt.subplot(2, 1, 1)
         plt.plot(self.block_time, self.all_block_angle[:len(self.block_time)], label='block angle')
-        plt.xlabel('Time (s)')
+        # plt.xlabel('Time (s)')
         plt.ylabel('Angle (rad)')
-        plt.title('Block Angle (Desired: ' + str(self.des_angle) + ' rad), Block Position (Desired: ' + str(self.des_x_pos) + 'm)')
+        plt.title('Block Angle (Desired: ' + str(self.des_angle) + ' rad), Block Position (Desired: ' + str(self.des_x_pos) + 'm), and Robot Positions')
         plt.legend()  # Add a legend.
         # plt.show()
 
         # fig3, ax3 = plt.subplots()
         plt.subplot(2, 1, 2)
-        plt.plot(self.block_time, self.block_all_pos[:len(self.block_time)], label='block position')
+        plt.plot(self.block_pos_time, self.block_all_pos[:len(self.block_pos_time)], label='block position')
+        plt.plot(self.car1_time, self.car1_all_pos[:len(self.car1_time)], label='robot1 position')
+        plt.plot(self.car2_time, self.car2_all_pos[:len(self.car2_time)], label='robot2 position')
         plt.xlabel('Time (s)')
         plt.ylabel('Position (m)')
         plt.legend()
         plt.show()
 
-        plt.figure()
-        plt.plot(self.block_time, self.car1_all_pos[:len(self.block_time)], label='robot1 position')
-        plt.plot(self.block_time, self.car2_all_pos[:len(self.block_time)], label='robot2 position')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Position (m)')
-        plt.title('Robot Positions')
-        plt.legend()
-        plt.show()
+        # plt.figure()
+        
+        # plt.xlabel('Time (s)')
+        # plt.ylabel('Position (m)')
+        # plt.title('Robot Positions')
+        # plt.legend()
+        # plt.show()
 
 
 if __name__ == '__main__':
